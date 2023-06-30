@@ -1,50 +1,47 @@
 import { galleryItems } from './gallery-items.js';
 // Change code below this line
 
-const collection = document.querySelector('.gallery');
+const galleryContainerRef = document.querySelector('.gallery');
+const previewPhotosMarkup = createPreviewPhotosMarkup(galleryItems);
+galleryContainerRef.insertAdjacentHTML('beforeend', previewPhotosMarkup);
 
-const imageList = galleryItems
-.map(({ preview, original, description }) => `
-    <li class="gallery-item">
-        <a class="gallery-link" href="${original}">
-            <img 
-            class="gallery-image"
-            src="${preview}"
-            data-source="${original}"
-            alt="${description}"
-            />
-        </a>
-    </li> `)
-    .join('');
 
-collection.insertAdjacentHTML('afterbegin', imageList);
-collection.addEventListener("click", openLargeImage);
+function createPreviewPhotosMarkup(galleryItems) {
+    return galleryItems
+        .map(({ preview, original, description }) => {
+            return `<li class="gallery__item">
+                        <a class="gallery__link" href="${original}">
+                            <img class="gallery__image" src="${preview}" data-source="${original}" alt="${description}" />
+                        </a>
+                    </li>`;
+        })
+        .join('');
+}
+const instance = basicLightbox.create(
+    `<img />`,
+    {
+        onShow: () => {
+            window.addEventListener('keydown', onEscPress);
+        },
+        onClose: () => {
+            window.removeEventListener('keydown', onEscPress);
+        },
+    }
+);
 
-function openLargeImage(event) {
+const onClickPreviewImage = (event) => {
     event.preventDefault();
-    if (event.target.classList.contains("gallery-item")) {
+    if (event.target.nodeName !== 'IMG') {
         return;
     }
+    instance.element().querySelector('img').src = event.target.dataset.source;
+    instance.show();
+};
 
-    const lightboxInstance = basicLightbox.create(
-        `<img src="${event.target.dataset.source}" alt="${event.target.description}" data-source="${event.target.dataset.source}" width="800" height="600">`,
-        {
-            onShow: () => {
-                document.addEventListener("keydown", onEscKeyPress);
-            },
-
-            onclose: () => {
-                document.removeEventListener("keydown", onEscKeyPress);
-            },
-        }
-    );
-    lightboxInstance.show();
-
-    function onEscKeyPress(event) {
-        if (event.code === "Escape") {
-            lightboxInstance.close();
-        }
-    }
+function onEscPress(event) {
+    if (event.code !== 'Escape') return;
+    instance.close();
 }
 
 console.log(galleryItems);
+
