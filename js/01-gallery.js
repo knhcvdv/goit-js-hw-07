@@ -1,61 +1,57 @@
 import { galleryItems } from "./gallery-items.js";
 // Change code below this line
 
-const galleryContainerRef = document.querySelector(".gallery");
-let instance;
+const galleryContainer = document.querySelector(".gallery");
 
-galleryContainerRef.addEventListener("click", previewPhotosMarkup);
-
-function previewPhotosMarkup(galleryItems) {
-    galleryItems.preventDefault();
-  const galleryLinkEl = galleryItems.target.closest(".gallery__link");
-  if (!galleryItems.target.classList.contains("gallery__image")) {
-    return;
-  }
-  
-  const galleryLinkHref = galleryItems.target.dataset.source;
-  const galleryLinkAlt = galleryLinkEl.children[0].alt;
-  instance = basicLightbox.create(
-    `
-	<img
-          class="gallery__image"
-          src="${galleryLinkHref}"
-          alt="${galleryLinkAlt}"
-        />
-`,
-    { closable: false }
-  );
-  instance.show();
-  if (instance.visible()) {
-    document.addEventListener("keydown", ModalCloser);
-  }
-}
-
-function ModalCloser(galleryItems) {
-  if (!(galleryItems.code === "Escape")) {
-    return;
-  }
-  document.removeEventListener("keydown", ModalCloser);
-  instance.close();
-}
-
-const createGalleryItemMarkup = ({ preview, original, description } = {}) => {
-  return `
-    <li class="gallery__item">
+const galleryMarkup = galleryItems
+  .map(({ preview, original, description }) =>
+    `<li class="gallery__item">
       <a class="gallery__link" href="${original}">
         <img
           class="gallery__image"
           src="${preview}"
-        //   data-source="${original}"
+          data-source="${original}"
           alt="${description}"
         />
       </a>
-    </li>
-  `;
-};
-
-const galleryItemsMarkup = galleryItems
-  .map((item) => createGalleryItemMarkup(item))
+    </li>`
+  )
   .join("");
 
-  galleryContainerRef.innerHTML = galleryItemsMarkup;
+galleryContainer.insertAdjacentHTML("afterbegin", galleryMarkup);
+
+galleryContainer.addEventListener("click", previewPhotosMarkup);
+
+function previewPhotosMarkup(event) {
+  event.preventDefault();
+  if (event.target.classList.contains("gallery__item")) {
+    return;
+  }
+
+  const instance = basicLightbox.create(
+    `<img
+      src="${event.target.dataset.source}"
+      alt="${event.target.alt}"
+      data-source="${event.target.dataset.source}"
+      width="800"
+      height="600"
+    />`,
+    {
+      onShow: () => {
+        document.addEventListener("keydown", ModalCloser);
+      },
+      onClose: () => {
+        document.removeEventListener("keydown", ModalCloser);
+      },
+    }
+  );
+  instance.show();
+
+  function ModalCloser(event) {
+    if (event.code === "Escape") {
+      instance.close();
+    }
+  }
+}
+
+console.log(galleryItems);
